@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Advanced Scientific Calculator - basic, scientific, matrix, complex, statistics, calculus, graphing, equation solving and unit conversion in one app." />
+    <title>Advanced Scientific Calculator</title>
+
+    <!-- Math engine: math.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+    <!-- Plotting: Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- Icons: FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+    <!-- ============ APP HEADER ============ -->
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-logo"><i class="fa-solid fa-square-root-variable"></i></span>
+            <div>
+                <h1>Advanced Scientific Calculator</h1>
+                <p class="tagline">Basic · Scientific · Matrix · Complex · Stats · Calculus · Graph · Convert</p>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button id="historyToggle" class="icon-btn" title="Toggle history panel" aria-label="Toggle history">
+                <i class="fa-solid fa-clock-rotate-left"></i><span class="hide-sm">History</span>
+            </button>
+            <button id="themeToggle" class="icon-btn" title="Toggle dark / light theme" aria-label="Toggle theme">
+                <i id="themeIcon" class="fa-solid fa-moon"></i><span class="hide-sm" id="themeLabel">Dark</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ============ TAB NAVIGATION ============ -->
+    <nav class="tab-bar" id="tabBar">
+        <button class="tab-btn active" data-tab="basic"><i class="fa-solid fa-calculator"></i><span>Basic</span></button>
+        <button class="tab-btn" data-tab="scientific"><i class="fa-solid fa-square-root-variable"></i><span>Scientific</span></button>
+        <button class="tab-btn" data-tab="matrix"><i class="fa-solid fa-table-cells"></i><span>Matrix</span></button>
+        <button class="tab-btn" data-tab="complex"><i class="fa-solid fa-square-root-variable"></i><span>Complex</span></button>
+        <button class="tab-btn" data-tab="statistics"><i class="fa-solid fa-chart-column"></i><span>Statistics</span></button>
+        <button class="tab-btn" data-tab="calculus"><i class="fa-solid fa-infinity"></i><span>Calculus</span></button>
+        <button class="tab-btn" data-tab="solver"><i class="fa-solid fa-equals"></i><span>Solver</span></button>
+        <button class="tab-btn" data-tab="graph"><i class="fa-solid fa-chart-line"></i><span>Graph</span></button>
+        <button class="tab-btn" data-tab="converter"><i class="fa-solid fa-arrow-right-arrow-left"></i><span>Converter</span></button>
+    </nav>
+
+    <!-- ============ MAIN LAYOUT ============ -->
+    <main class="app-main">
+        <section class="app-content" id="appContent">
+
+            <!-- ===== BASIC + SCIENTIFIC shared display/keypad ===== -->
+            <div class="panel active" id="panel-basic">
+                <div class="calc-wrapper">
+                    <!-- Display -->
+                    <div class="calc-display">
+                        <div class="angle-row">
+                            <button id="angleToggle" class="chip-btn">DEG</button>
+                            <span class="memory-indicator" id="memoryIndicator">M</span>
+                            <span class="result-hint" id="resultHint">=</span>
+                        </div>
+                        <input type="text" id="expressionInput" class="expression-input"
+                               placeholder="0" autocomplete="off" spellcheck="false" />
+                        <div class="result-line" id="resultLine">0</div>
+                        <div class="error-line" id="errorLine"></div>
+                    </div>
+
+                    <!-- Basic keypad -->
+                    <div class="keypad" id="basicKeypad">
+                        <button class="key fn" data-insert="MC">MC</button>
+                        <button class="key fn" data-insert="MR">MR</button>
+                        <button class="key fn" data-insert="M+">M+</button>
+                        <button class="key fn" data-insert="M-">M-</button>
+                        <button class="key fn" data-insert="MS">MS</button>
+
+                        <button class="key op" data-action="clear">C</button>
+                        <button class="key op" data-action="backspace">⌫</button>
+                        <button class="key op" data-insert="(">(</button>
+                        <button class="key op" data-insert=")">)</button>
+                        <button class="key op" data-insert="/">÷</button>
+
+                        <button class="key num" data-insert="7">7</button>
+                        <button class="key num" data-insert="8">8</button>
+                        <button class="key num" data-insert="9">9</button>
+                        <button class="key op" data-insert="*">×</button>
+                        <button class="key const" data-insert="%">%</button>
+
+                        <button class="key num" data-insert="4">4</button>
+                        <button class="key num" data-insert="5">5</button>
+                        <button class="key num" data-insert="6">6</button>
+                        <button class="key op" data-insert="-">−</button>
+                        <button class="key const" data-insert="!">x!</button>
+
+                        <button class="key num" data-insert="1">1</button>
+                        <button class="key num" data-insert="2">2</button>
+                        <button class="key num" data-insert="3">3</button>
+                        <button class="key op" data-insert="+">+</button>
+                        <button class="key equals" data-action="equals" rowspan="2">=</button>
+
+                        <button class="key num zero" data-insert="0">0</button>
+                        <button class="key num" data-insert=".">.</button>
+                        <button class="key const" data-insert="π">π</button>
+                        <button class="key const" data-insert="e">e</button>
+                    </div>
+
+                    <p class="hint"><i class="fa-solid fa-lightbulb"></i> Tip: you can also type directly or use the keyboard. Keys: 0-9, + − × ÷, Enter (=), Backspace, Esc (clear), % , ^ , ( ).</p>
+                    <p class="hint"><a href="#" class="switch-link" data-tab="scientific"><i class="fa-solid fa-arrow-right"></i> Switch to Scientific</a></p>
+                </div>
+            </div>
+
+            <!-- ===== SCIENTIFIC ===== -->
+            <div class="panel" id="panel-scientific">
+                <div class="calc-wrapper">
+                    <div class="calc-display">
+                        <div class="angle-row">
+                            <button id="angleToggle2" class="chip-btn">DEG</button>
+                            <span class="memory-indicator" id="memoryIndicator2">M</span>
+                            <span class="result-hint">=</span>
+                        </div>
+                        <input type="text" id="expressionInput2" class="expression-input"
+                               placeholder="0" autocomplete="off" spellcheck="false" />
+                        <div class="result-line" id="resultLine2">0</div>
+                        <div class="error-line" id="errorLine2"></div>
+                    </div>
+
+                    <div class="keypad sci-keypad" id="sciKeypad">
+                        <!-- Row: inv toggle + trig -->
+                        <button class="key fn toggle" id="invToggle" data-action="inv">INV</button>
+                        <button class="key sci" data-insert="sin(">sin</button>
+                        <button class="key sci" data-insert="cos(">cos</button>
+                        <button class="key sci" data-insert="tan(">tan</button>
+                        <button class="key sci" data-insert="csc(">csc</button>
+                        <button class="key sci" data-insert="sec(">sec</button>
+                        <button class="key sci" data-insert="cot(">cot</button>
+
+                        <!-- Row: hyperbolic + logs -->
+                        <button class="key sci" data-insert="sinh(">sinh</button>
+                        <button class="key sci" data-insert="cosh(">cosh</button>
+                        <button class="key sci" data-insert="tanh(">tanh</button>
+                        <button class="key sci" data-insert="log(">log₁₀</button>
+                        <button class="key sci" data-insert="ln(">ln</button>
+                        <button class="key sci" data-insert="exp(">eˣ</button>
+                        <button class="key sci" data-insert="10^(">10ˣ</button>
+
+                        <!-- Row: powers -->
+                        <button class="key sci" data-insert="^2">x²</button>
+                        <button class="key sci" data-insert="^3">x³</button>
+                        <button class="key sci" data-insert="^">xʸ</button>
+                        <button class="key sci" data-insert="sqrt(">√</button>
+                        <button class="key sci" data-insert="cbrt(">∛</button>
+                        <button class="key sci" data-insert="nthRoot(">ⁿ√</button>
+                        <button class="key sci" data-insert="!">x!</button>
+
+                        <!-- Row: misc -->
+                        <button class="key sci" data-insert="abs(">|x|</button>
+                        <button class="key sci" data-insert="mod">mod</button>
+                        <button class="key sci" data-insert="^-1">1/x</button>
+                        <button class="key const" data-insert="π">π</button>
+                        <button class="key const" data-insert="e">e</button>
+                        <button class="key const" data-insert="i">i</button>
+                        <button class="key sci" data-insert="log2(">log₂</button>
+
+                        <!-- Row: constants dropdown style -->
+                        <button class="key sci" data-insert="2.998e8">c</button>
+                        <button class="key sci" data-insert="6.6743e-11">G</button>
+                        <button class="key sci" data-insert="6.62607015e-34">h</button>
+                        <button class="key sci" data-insert="1.380649e-23">k</button>
+                        <button class="key sci" data-insert="6.02214076e23">Nₐ</button>
+                        <button class="key sci" data-insert="1.602176634e-19">qₑ</button>
+                        <button class="key sci" data-insert="random()">rand</button>
+
+                        <!-- Row: edit -->
+                        <button class="key op" data-action="clear">C</button>
+                        <button class="key op" data-action="backspace">⌫</button>
+                        <button class="key op" data-insert="(">(</button>
+                        <button class="key op" data-insert=")">)</button>
+                        <button class="key op" data-insert=",">,</button>
+                        <button class="key op" data-insert="/">÷</button>
+                        <button class="key const" data-insert="%">%</button>
+
+                        <!-- Numeric block -->
+                        <button class="key num" data-insert="7">7</button>
+                        <button class="key num" data-insert="8">8</button>
+                        <button class="key num" data-insert="9">9</button>
+                        <button class="key op" data-insert="*">×</button>
+                        <button class="key op" data-insert="-">−</button>
+
+                        <button class="key num" data-insert="4">4</button>
+                        <button class="key num" data-insert="5">5</button>
+                        <button class="key num" data-insert="6">6</button>
+                        <button class="key op" data-insert="+">+</button>
+                        <button class="key equals" data-action="equals" rowspan="3">=</button>
+
+                        <button class="key num" data-insert="1">1</button>
+                        <button class="key num" data-insert="2">2</button>
+                        <button class="key num" data-insert="3">3</button>
+                        <button class="key op" data-insert="EE">EE</button>
+
+                        <button class="key num zero" data-insert="0">0</button>
+                        <button class="key num" data-insert=".">.</button>
+                        <button class="key const" data-insert="Ans">Ans</button>
+                        <button class="key op" data-insert="^">^</button>
+                    </div>
+
+                    <p class="hint"><i class="fa-solid fa-circle-info"></i> INV toggles inverse functions (asin, acos, atan …). Angle mode (DEG/RAD) affects all trig functions.</p>
+                </div>
+            </div>
+
+            <!-- ===== MATRIX ===== -->
+            <div class="panel" id="panel-matrix">
+                <h2 class="panel-title"><i class="fa-solid fa-table-cells"></i> Matrix Calculator</h2>
+                <div class="tool-grid two-col">
+                    <div class="card">
+                        <h3><i class="fa-solid fa-a"></i> Matrix A</h3>
+                        <div class="dim-row">
+                            <label>Rows <input type="number" id="matARows" value="2" min="1" max="8"></label>
+                            <label>Cols <input type="number" id="matACols" value="2" min="1" max="8"></label>
+                            <button class="btn" id="matABuild"><i class="fa-solid fa-hammer"></i> Build</button>
+                        </div>
+                        <div class="matrix-input" id="matrixA"></div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fa-solid fa-b"></i> Matrix B</h3>
+                        <div class="dim-row">
+                            <label>Rows <input type="number" id="matBRows" value="2" min="1" max="8"></label>
+                            <label>Cols <input type="number" id="matBCols" value="2" min="1" max="8"></label>
+                            <button class="btn" id="matBBuild"><i class="fa-solid fa-hammer"></i> Build</button>
+                        </div>
+                        <div class="matrix-input" id="matrixB"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-gears"></i> Operations</h3>
+                    <div class="btn-row">
+                        <button class="btn op-btn" data-mat="add">A + B</button>
+                        <button class="btn op-btn" data-mat="sub">A − B</button>
+                        <button class="btn op-btn" data-mat="mul">A × B</button>
+                        <button class="btn op-btn" data-mat="detA">det(A)</button>
+                        <button class="btn op-btn" data-mat="detB">det(B)</button>
+                        <button class="btn op-btn" data-mat="invA">A⁻¹</button>
+                        <button class="btn op-btn" data-mat="invB">B⁻¹</button>
+                        <button class="btn op-btn" data-mat="transA">Aᵀ</button>
+                        <button class="btn op-btn" data-mat="transB">Bᵀ</button>
+                        <button class="btn op-btn" data-mat="rankA">rank(A)</button>
+                        <button class="btn op-btn" data-mat="rankB">rank(B)</button>
+                        <button class="btn op-btn" data-mat="eigA">eig(A)</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-superscript"></i> Solve System AX = B</h3>
+                    <p class="hint"><i class="fa-solid fa-circle-info"></i> A = coefficient matrix, B = constants column vector (one column).</p>
+                    <button class="btn op-btn" id="solveLinSystem"><i class="fa-solid fa-play"></i> Solve A·X = B</button>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-square-check"></i> Result</h3>
+                    <div class="result-box" id="matrixResult">Build matrices and choose an operation.</div>
+                </div>
+            </div>
+
+            <!-- ===== COMPLEX ===== -->
+            <div class="panel" id="panel-complex">
+                <h2 class="panel-title"><i class="fa-solid fa-square-root-variable"></i> Complex Number Calculator</h2>
+                <div class="tool-grid two-col">
+                    <div class="card">
+                        <h3><i class="fa-solid fa-1"></i> z₁</h3>
+                        <div class="complex-row">
+                            <input type="number" id="z1r" placeholder="real" value="3">
+                            <span>+ i</span>
+                            <input type="number" id="z1i" placeholder="imag" value="4">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fa-solid fa-2"></i> z₂</h3>
+                        <div class="complex-row">
+                            <input type="number" id="z2r" placeholder="real" value="1">
+                            <span>+ i</span>
+                            <input type="number" id="z2i" placeholder="imag" value="2">
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fa-solid fa-gears"></i> Operations</h3>
+                    <div class="btn-row">
+                        <button class="btn op-btn" data-complex="add">z₁ + z₂</button>
+                        <button class="btn op-btn" data-complex="sub">z₁ − z₂</button>
+                        <button class="btn op-btn" data-complex="mul">z₁ × z₂</button>
+                        <button class="btn op-btn" data-complex="div">z₁ ÷ z₂</button>
+                        <button class="btn op-btn" data-complex="mod1">|z₁|</button>
+                        <button class="btn op-btn" data-complex="arg1">arg(z₁)</button>
+                        <button class="btn op-btn" data-complex="conj1">conj(z₁)</button>
+                        <button class="btn op-btn" data-complex="polar1">z₁ polar</button>
+                        <button class="btn op-btn" data-complex="rect1">z₁→rect</button>
+                    </div>
+                    <div class="btn-row">
+                        <label>Angle mode
+                            <select id="complexAngleMode"><option value="deg">DEG</option><option value="rad">RAD</option></select>
+                        </label>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fa-solid fa-square-check"></i> Result</h3>
+                    <div class="result-box" id="complexResult">Enter values and choose an operation.</div>
+                </div>
+            </div>
+
+            <!-- ===== STATISTICS ===== -->
+            <div class="panel" id="panel-statistics">
+                <h2 class="panel-title"><i class="fa-solid fa-chart-column"></i> Statistics Calculator</h2>
+                <div class="card">
+                    <h3><i class="fa-solid fa-database"></i> Data set (comma or space separated)</h3>
+                    <textarea id="statData" rows="3" placeholder="e.g. 2, 4, 4, 4, 5, 5, 7, 9">2, 4, 4, 4, 5, 5, 7, 9</textarea>
+                    <div class="btn-row">
+                        <button class="btn op-btn" id="statCompute"><i class="fa-solid fa-bolt"></i> Compute</button>
+                        <button class="btn op-btn" id="statClear"><i class="fa-solid fa-eraser"></i> Clear</button>
+                    </div>
+                    <div class="result-box" id="statResult">Descriptive statistics will appear here.</div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-chart-simple"></i> Data Plotting</h3>
+                    <p class="hint"><i class="fa-solid fa-circle-info"></i> Visualize the data set above with the selected chart type.</p>
+                    <div class="btn-row">
+                        <label>Chart type
+                            <select id="statChartType">
+                                <option value="histogram">Histogram</option>
+                                <option value="box">Box plot</option>
+                                <option value="violin">Violin plot</option>
+                                <option value="line">Line plot</option>
+                                <option value="bar">Bar plot</option>
+                            </select>
+                        </label>
+                        <label>Bins <input type="number" id="statBins" value="10" min="1" max="100"></label>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn op-btn" id="statPlot"><i class="fa-solid fa-chart-column"></i> Plot chart</button>
+                        <button class="btn op-btn" id="statPlotClear"><i class="fa-solid fa-eraser"></i> Clear</button>
+                    </div>
+                    <div id="statPlotDiv" class="plot-area"></div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-chart-line"></i> Linear Regression (X list / Y list)</h3>
+                    <textarea id="regX" rows="2" placeholder="x values: 1,2,3,4">1, 2, 3, 4, 5</textarea>
+                    <textarea id="regY" rows="2" placeholder="y values: 2,4,5,4,5">2, 4, 5, 4, 5</textarea>
+                    <button class="btn op-btn" id="regCompute"><i class="fa-solid fa-bolt"></i> Fit Line</button>
+                    <div class="result-box" id="regResult">y = a·x + b with correlation r will appear here.</div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-dice"></i> Probability Distributions</h3>
+                    <div class="dist-grid">
+                        <div>
+                            <h4>Binomial</h4>
+                            <label>n <input type="number" id="binN" value="10"></label>
+                            <label>p <input type="number" id="binP" value="0.5" step="0.01"></label>
+                            <label>k <input type="number" id="binK" value="5"></label>
+                            <button class="btn op-btn" id="binCompute"><i class="fa-solid fa-bolt"></i> P(X=k)</button>
+                        </div>
+                        <div>
+                            <h4>Poisson</h4>
+                            <label>λ <input type="number" id="poiL" value="3"></label>
+                            <label>k <input type="number" id="poiK" value="2"></label>
+                            <button class="btn op-btn" id="poiCompute"><i class="fa-solid fa-bolt"></i> P(X=k)</button>
+                        </div>
+                        <div>
+                            <h4>Student-t / Chi²</h4>
+                            <label>df <input type="number" id="dfVal" value="10"></label>
+                            <label>x <input type="number" id="distX" value="1"></label>
+                            <button class="btn op-btn" id="tCompute"><i class="fa-solid fa-bolt"></i> t pdf(x)</button>
+                            <button class="btn op-btn" id="chiCompute"><i class="fa-solid fa-bolt"></i> χ² pdf(x)</button>
+                        </div>
+                    </div>
+                    <div class="result-box" id="distResult">Distribution results appear here.</div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-bell"></i> Normal Distribution &amp; Area Under Curve</h3>
+                    <p class="hint"><i class="fa-solid fa-circle-info"></i> Computes the PDF f(x) at a point, the cumulative P(X≤x), and the area P(a≤X≤b) — shaded on the curve below.</p>
+                    <div class="three-col">
+                        <label>μ (mean) <input type="number" id="normM" value="0" step="any"></label>
+                        <label>σ (std dev) <input type="number" id="normS" value="1" step="any" min="0.0001"></label>
+                        <label>x (point) <input type="number" id="normX" value="0" step="any"></label>
+                    </div>
+                    <div class="three-col">
+                        <label>a (lower) <input type="number" id="normA" value="-1" step="any"></label>
+                        <label>b (upper) <input type="number" id="normB" value="1" step="any"></label>
+                        <label>x-range ± <input type="number" id="normRange" value="4" step="any" min="0.5"></label>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn op-btn" id="normCompute"><i class="fa-solid fa-bolt"></i> P(X≤x)</button>
+                        <button class="btn op-btn" id="normAreaCompute"><i class="fa-solid fa-square-check"></i> Area P(a≤X≤b)</button>
+                        <button class="btn op-btn" id="normPlot"><i class="fa-solid fa-chart-area"></i> Plot curve</button>
+                        <button class="btn op-btn" id="normPlotClear"><i class="fa-solid fa-eraser"></i> Clear</button>
+                    </div>
+                    <div class="result-box" id="normResult">Normal distribution values appear here.</div>
+                    <div id="normPlotDiv" class="plot-area"></div>
+                </div>
+            </div>
+
+            <!-- ===== CALCULUS ===== -->
+            <div class="panel" id="panel-calculus">
+                <h2 class="panel-title"><i class="fa-solid fa-infinity"></i> Calculus Tools</h2>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-arrow-trend-up"></i> Numerical Differentiation</h3>
+                    <label>Function f(x) <input type="text" id="derivExpr" value="x^3 + 2*x"></label>
+                    <label>At x = <input type="number" id="derivX" value="1" step="any"></label>
+                    <button class="btn op-btn" id="derivCompute"><i class="fa-solid fa-bolt"></i> f'(x)</button>
+                    <div class="result-box" id="derivResult">Derivative value appears here.</div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-chart-area"></i> Numerical Integration</h3>
+                    <label>Function f(x) <input type="text" id="intExpr" value="sin(x)"></label>
+                    <div class="two-col">
+                        <label>From a <input type="number" id="intA" value="0" step="any"></label>
+                        <label>To b <input type="number" id="intB" value="3.141592653589793" step="any"></label>
+                    </div>
+                    <label>Intervals n <input type="number" id="intN" value="1000"></label>
+                    <button class="btn op-btn" id="trapCompute"><i class="fa-solid fa-chart-area"></i> Trapezoidal</button>
+                    <button class="btn op-btn" id="simpCompute"><i class="fa-solid fa-chart-area"></i> Simpson's 1/3</button>
+                    <div class="result-box" id="intResult">Integral value appears here.</div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-arrows-to-circle"></i> Limit (numeric approximation)</h3>
+                    <label>Function f(x) <input type="text" id="limExpr" value="sin(x)/x"></label>
+                    <label>x → <input type="number" id="limX" value="0" step="any"></label>
+                    <button class="btn op-btn" id="limCompute"><i class="fa-solid fa-bolt"></i> Evaluate limit</button>
+                    <div class="result-box" id="limResult">Limit appears here.</div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-magnifying-glass-chart"></i> Root Finding</h3>
+                    <label>Function f(x) <input type="text" id="rootExpr" value="x^3 - 4*x + 2"></label>
+                    <div class="btn-row">
+                        <button class="btn op-btn" id="bisectBtn">Bisection</button>
+                        <button class="btn op-btn" id="newtonBtn">Newton-Raphson</button>
+                        <button class="btn op-btn" id="secantBtn">Secant</button>
+                    </div>
+                    <div class="three-col">
+                        <label>a <input type="number" id="rootA" value="-3" step="any"></label>
+                        <label>b / x0 <input type="number" id="rootB" value="3" step="any"></label>
+                        <label>tol <input type="number" id="rootTol" value="0.0001" step="any"></label>
+                    </div>
+                    <div class="result-box" id="rootResult">Root will appear here. Bisection/Secant use a &amp; b, Newton uses b as x0.</div>
+                </div>
+            </div>
+
+            <!-- ===== SOLVER ===== -->
+            <div class="panel" id="panel-solver">
+                <h2 class="panel-title"><i class="fa-solid fa-equals"></i> Equation Solver</h2>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-1"></i> Linear: ax + b = 0</h3>
+                    <label>a <input type="number" id="linA" value="2"></label>
+                    <label>b <input type="number" id="linB" value="-6"></label>
+                    <button class="btn op-btn" id="solveLinear"><i class="fa-solid fa-play"></i> Solve</button>
+                    <div class="result-box" id="linResult"></div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-2"></i> Quadratic: ax² + bx + c = 0</h3>
+                    <label>a <input type="number" id="quadA" value="1"></label>
+                    <label>b <input type="number" id="quadB" value="-5"></label>
+                    <label>c <input type="number" id="quadC" value="6"></label>
+                    <button class="btn op-btn" id="solveQuad"><i class="fa-solid fa-play"></i> Solve</button>
+                    <div class="result-box" id="quadResult"></div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-3"></i> Cubic: ax³ + bx² + cx + d = 0</h3>
+                    <label>a <input type="number" id="cubA" value="1"></label>
+                    <label>b <input type="number" id="cubB" value="-6"></label>
+                    <label>c <input type="number" id="cubC" value="11"></label>
+                    <label>d <input type="number" id="cubD" value="-6"></label>
+                    <button class="btn op-btn" id="solveCubic"><i class="fa-solid fa-play"></i> Solve</button>
+                    <div class="result-box" id="cubResult"></div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-superscript"></i> Polynomial Root Finder</h3>
+                    <p class="hint"><i class="fa-solid fa-circle-info"></i> Enter coefficients highest degree first, e.g. <code>1,0,-5,4</code> → x³ − 5x + 4</p>
+                    <input type="text" id="polyCoeffs" value="1, 0, -5, 4">
+                    <button class="btn op-btn" id="solvePoly"><i class="fa-solid fa-play"></i> Find roots</button>
+                    <div class="result-box" id="polyResult"></div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-layer-group"></i> System of Linear Equations</h3>
+                    <p class="hint"><i class="fa-solid fa-circle-info"></i> One equation per line using x, y, z, w. Example: <code>2x + y - z = 1</code></p>
+                    <textarea id="systemEqs" rows="4">2x + y - z = 1
+x - y + 2z = 4
+3x + 2y + z = 7</textarea>
+                    <button class="btn op-btn" id="solveSystem"><i class="fa-solid fa-play"></i> Solve system</button>
+                    <div class="result-box" id="systemResult"></div>
+                </div>
+            </div>
+
+            <!-- ===== GRAPH ===== -->
+            <div class="panel" id="panel-graph">
+                <h2 class="panel-title"><i class="fa-solid fa-chart-line"></i> Graph Plotter</h2>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-square-root-variable"></i> Functions</h3>
+                    <div id="functionList">
+                        <div class="func-row">
+                            <input type="text" class="func-expr" placeholder="f(x), e.g. sin(x)" value="sin(x)">
+                            <button class="btn op-btn plotOne"><i class="fa-solid fa-chart-line"></i> Plot</button>
+                            <button class="btn op-btn removeFunc"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <button class="btn" id="addFunc"><i class="fa-solid fa-plus"></i> Add function</button>
+                    <button class="btn op-btn" id="plotAll"><i class="fa-solid fa-layer-group"></i> Plot all</button>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fa-solid fa-sliders"></i> Range & Options</h3>
+                    <div class="three-col">
+                        <label>x-min <input type="number" id="xMin" value="-10" step="any"></label>
+                        <label>x-max <input type="number" id="xMax" value="10" step="any"></label>
+                        <label>step <input type="number" id="xStep" value="0.1" step="any"></label>
+                    </div>
+                    <div class="btn-row">
+                        <label>Angle mode
+                            <select id="graphAngleMode"><option value="rad">RAD</option><option value="deg">DEG</option></select>
+                        </label>
+                        <label><input type="checkbox" id="showKeyPoints" checked> Show key points</label>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="btn-row">
+                        <button class="btn op-btn" id="clearGraph"><i class="fa-solid fa-eraser"></i> Clear graph</button>
+                        <button class="btn op-btn" id="resetZoom"><i class="fa-solid fa-arrows-rotate"></i> Reset zoom</button>
+                    </div>
+                    <div id="plotDiv" class="plot-area"></div>
+                    <div class="result-box" id="graphInfo">Plot information (intercepts, extrema) appears here.</div>
+                </div>
+            </div>
+
+            <!-- ===== CONVERTER ===== -->
+            <div class="panel" id="panel-converter">
+                <h2 class="panel-title"><i class="fa-solid fa-arrow-right-arrow-left"></i> Unit Converter</h2>
+                <div class="card">
+                    <h3><i class="fa-solid fa-ruler-combined"></i> Conversion</h3>
+                    <label>Category
+                        <select id="convCategory">
+                            <option value="length">Length</option>
+                            <option value="area">Area</option>
+                            <option value="volume">Volume</option>
+                            <option value="mass">Mass</option>
+                            <option value="time">Time</option>
+                            <option value="speed">Speed</option>
+                            <option value="temperature">Temperature</option>
+                            <option value="pressure">Pressure</option>
+                            <option value="energy">Energy</option>
+                            <option value="power">Power</option>
+                            <option value="angle">Angle</option>
+                        </select>
+                    </label>
+                    <div class="convert-row">
+                        <input type="number" id="convValue" value="1" step="any">
+                        <select id="convFrom"></select>
+                        <span><i class="fa-solid fa-right-left"></i></span>
+                        <select id="convTo"></select>
+                        <button class="btn op-btn" id="convCompute"><i class="fa-solid fa-bolt"></i> Convert</button>
+                    </div>
+                    <div class="result-box" id="convResult">Result appears here.</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ============ HISTORY PANEL ============ -->
+        <aside class="history-panel" id="historyPanel" aria-label="Calculation history">
+            <div class="history-head">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> History</h3>
+                <button class="btn op-btn" id="clearHistory"><i class="fa-solid fa-trash-can"></i> Clear</button>
+            </div>
+            <ul class="history-list" id="historyList">
+                <li class="history-empty"><i class="fa-regular fa-clock"></i><br>No calculations yet.</li>
+            </ul>
+        </aside>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <span class="brand-logo sm"><i class="fa-solid fa-square-root-variable"></i></span>
+                <span>Advanced Scientific Calculator</span>
+            </div>
+            <div class="footer-tech">
+                <span class="tech-badge"><i class="fa-solid fa-square-root-variable"></i> math.js</span>
+                <span class="tech-badge"><i class="fa-solid fa-chart-line"></i> Plotly.js</span>
+                <span class="tech-badge"><i class="fa-solid fa-icons"></i> FontAwesome</span>
+            </div>
+            <div class="footer-meta">
+                <span><i class="fa-regular fa-circle-check"></i> Runs fully in your browser · v1.0</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
